@@ -3,7 +3,7 @@ find_package(PythonLibs 3 REQUIRED)
 STRING(REGEX REPLACE "^([0-9]+)\\.[0-9]+\\.[0-9]+" "\\1" python_major_vers "${PYTHONLIBS_VERSION_STRING}")
 STRING(REGEX REPLACE "^[0-9]+\\.([0-9])+\\.[0-9]+" "\\1" python_minor_vers "${PYTHONLIBS_VERSION_STRING}")
 STRING(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+)" "\\1" python_patch_vers "${PYTHONLIBS_VERSION_STRING}")
-find_package(Boost COMPONENTS python-py${python_major_vers}${python_minor_vers})
+find_package(Boost COMPONENTS python-py${python_major_vers}${python_minor_vers} REQUIRED)
 
 include_directories(EIGEN3_INCLUDE_DIR)
 include_directories(/usr/include/eigen3)
