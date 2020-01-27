@@ -225,15 +225,23 @@ const char * c_model_engine_ctrl::_str_par[num_params] =
   {
     "fth", "bth", "umax", "umin",
     "rgamma", "rfdelta", "rbdelta",
-    "e0f", "e0df", "epf", "epdf", "eff", "r0f", "rpf", "rff", "qddf", "qudf", "qdpf", "qupf",
-    "e0b", "e0db", "efb", "r0b", "rfb", "qdb", "qub"    
+    "e0f", "e0df", "epf", "epdf", "eff",
+    "r0f", "rpf", "rff",
+    "qddf", "qudf", "qdpf", "qupf",
+    "e0b", "e0db", "efb",
+    "r0b", "rfb",
+    "qdb", "qub"    
   };
 
 const char * c_model_engine_ctrl::_str_par_exp[num_params] =
   {
-    "Threshold, neutral to forward", "Threshold neutral to backward",
-    "Maximum value of control input", "Minimum value of control input",
-    "Speed of gear switching (rate per second)", "Speed of throttle control in forward gear (rate per second)", "Speed of throttle control in backward gear (rate per second)",
+    "Threshold, neutral to forward",
+    "Threshold neutral to backward",
+    "Maximum value of control input",
+    "Minimum value of control input",
+    "Speed of forward gear switching (rate per second)",
+    "Speed of throttle control in forward gear (rate per second)",
+    "Speed of throttle control in backward gear (rate per second)",
     "Forward engine control, idle point (up control)",
     "Forward engine control, idle point (down control)",
     "Forward engine control, planing point (up control)",
@@ -249,6 +257,8 @@ const char * c_model_engine_ctrl::_str_par_exp[num_params] =
     "Backward engine control, idle point (up control)",
     "Backward engine control, idle point (down control)",
     "Backward engine control, full point",
+    "Bacward engine rev, idle point",
+    "Backward engine rev, full point",
     "Quadratic coefficient, backward-down control curve",
     "Quadratic coefficeint, backward-up control curve"
   };
