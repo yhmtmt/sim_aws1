@@ -257,8 +257,8 @@ void f_sim_aws1::set_control_output()
   
   // control values are directry from previous update.
   m_ctrl_stat.ctrl_src = acp.ctrl_src;
-  m_ctrl_stat.meng_aws = min(max(255, (int)(m_sv_cur.eng)), 0);
-  m_ctrl_stat.rud_aws = min(max(255, (int)(m_sv_cur.rud)), 0);
+  m_ctrl_stat.meng_aws = max(min(255, (int)(m_sv_cur.eng)), 0);
+  m_ctrl_stat.rud_aws = max(min(255, (int)(m_sv_cur.rud)), 0);
   
   switch (m_ctrl_stat.ctrl_src){
   case ACS_UI:
