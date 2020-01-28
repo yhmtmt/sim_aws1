@@ -530,7 +530,7 @@ public:
 };
 
 #ifdef PY_EXPORT
-BOOST_PYTHON_MODULE( pyawssim ){
+BOOST_PYTHON_MODULE( libmodel_aws1 ){
   namespace python = boost::python;
   python::class_<c_model_base>("c_model_base")
     .def("set_params", &c_model_base::set_params_py)
