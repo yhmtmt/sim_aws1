@@ -8,6 +8,7 @@ find_package(Boost COMPONENTS python-py${python_major_vers}${python_minor_vers} 
 include_directories(${EIGEN3_INCLUDE_DIR})
 add_library(sim_aws1 SHARED f_sim_aws1.cpp c_model.cpp)
 target_include_directories(sim_aws1 PUBLIC ${PROJECT_SOURCE_DIR}/include)
+install(TARGETS sim_aws1 DESTINATION lib)
 
 set(CMAKE_SHARED_MODULE_PREFIX "")
 add_library(model_aws1 SHARED c_model.cpp)
