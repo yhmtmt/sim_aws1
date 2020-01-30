@@ -231,7 +231,9 @@ class c_model_3dof: public c_model_base
   virtual void init();
 
   #ifdef PY_EXPORT
-  boost::python::tuple update_py(double & _u, double & _v, double & _r, double & _taux, double & _tauy, double & _taun, double dt)
+  boost::python::tuple update_py(double _u, double _v, double _r,
+				 double _taux, double _tauy, double _taun,
+				 double dt)
   {
     double v[3]={_u,_v,_r};
     double vnew[3];
