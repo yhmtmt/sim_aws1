@@ -75,12 +75,10 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   // aws's control parameters
   register_fpar("awsrud", &m_ctrl_stat.rud_aws, "Control value of AWS1's rudder.");
   register_fpar("awsmeng", &m_ctrl_stat.meng_aws, "Control value of AWS1's main engine.");
-  register_fpar("awsseng", &m_ctrl_stat.seng_aws, "Control value of AWS1's sub engine.");
   
   // remote controller's control parameters (Read Only)
   register_fpar("rmcrud", &m_ctrl_stat.rud_rmc, "Control value of AWS1's rudder controller.");
   register_fpar("rmcmeng", &m_ctrl_stat.meng_rmc, "Control value of AWS1's main engine controller.");
-  register_fpar("rmcseng", &m_ctrl_stat.seng_rmc, "Control value of AWS1's sub engine controller.");
   register_fpar("rud_sta", &m_ctrl_stat.rud_sta, "Rudder Status of AWS1's.");
   
   // Remote controllers control points of the main engine. 
@@ -96,20 +94,6 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   register_fpar("meng_nut", &m_ctrl_stat.meng_nut, "Nutral control value for AWS1's main engine.");
   register_fpar("meng_nub", &m_ctrl_stat.meng_nub, "Nutral to Backward control value for AWS1's main engine.");
   register_fpar("meng_min", &m_ctrl_stat.meng_min, "Minimum control value for AWS1's main engine.");
-  
-  // Remote controllers control points of the sub engine.
-  register_fpar("seng_max_rmc", &m_ctrl_stat.seng_max_rmc, "Maximum control value of AWS1's sub engine controller.");
-  register_fpar("seng_nuf_rmc", &m_ctrl_stat.seng_nuf_rmc, "Nutral to Forward control value of AWS1's sub engine controller.");
-  register_fpar("seng_nut_rmc", &m_ctrl_stat.seng_nut_rmc, "Nutral control value of AWS1's sub engine controller.");
-  register_fpar("seng_nub_rmc", &m_ctrl_stat.seng_nub_rmc, "Nutral to Backward control value of AWS1's sub engine controller.");
-  register_fpar("seng_min_rmc", &m_ctrl_stat.seng_min_rmc, "Minimum control value of AWS1's sub engine controller.");
-  
-  // Each control points of the sub engine output
-  register_fpar("seng_max", &m_ctrl_stat.seng_max, "Maximum control value for AWS1's sub engine.");
-  register_fpar("seng_nuf", &m_ctrl_stat.seng_nuf, "Nutral to Forward control value for AWS1's sub engine.");
-  register_fpar("seng_nut", &m_ctrl_stat.seng_nut, "Nutral control value for AWS1's sub engine.");
-  register_fpar("seng_nub", &m_ctrl_stat.seng_nub, "Nutral to Backward control value for AWS1's sub engine.");
-  register_fpar("seng_min", &m_ctrl_stat.seng_min, "Minimum control value for AWS1's sub engine.");
   
   // Remote controller's control points of the rudder.
   register_fpar("rud_max_rmc", &m_ctrl_stat.rud_max_rmc, "Maximum control value of AWS1's rudder controller.");
@@ -132,7 +116,6 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   register_fpar("rud_sta_out_min", &m_ctrl_stat.rud_sta_out_min, "Minimum output value of AWS1's rudder angle to rudder pump.");
 
   register_fpar("meng", &m_ctrl_stat.meng, "Output value for main engine.");
-  register_fpar("seng", &m_ctrl_stat.meng, "Output value for sub engine.");
   register_fpar("rud", &m_ctrl_stat.rud, "Output value for rudder.");
   register_fpar("rud_sta_out", &m_ctrl_stat.rud_sta_out, "Output value for rudder status.");
   
@@ -209,7 +192,7 @@ void f_sim_aws1::set_control_input()
 {
   // Control input selection
   // control input source is selected by ctrl_src parameter in ctrl_ui channel.
-  // meng_aws,  seng_aws, rud_aws are normalized control value to [0 255], their neutral value is 127.
+  // meng_aws,  rud_aws are normalized control value to [0 255], their neutral value is 127.
   s_aws1_ctrl_inst acp;
   if (m_ch_ctrl_ui)
     m_ch_ctrl_ui->get(acp);
@@ -275,11 +258,6 @@ void f_sim_aws1::set_control_output()
 				m_ctrl_stat.meng_max, m_ctrl_stat.meng_nuf,
 				m_ctrl_stat.meng_nut,
 				m_ctrl_stat.meng_nub, m_ctrl_stat.meng_min);
-    m_ctrl_stat.seng = map_oval(m_ctrl_stat.seng_aws,
-				0xff, 0x7f + 0x19, 0x7f, 0x7f - 0x19, 0x00,
-				m_ctrl_stat.seng_max, m_ctrl_stat.seng_nuf,
-				m_ctrl_stat.seng_nut,
-				m_ctrl_stat.seng_nub, m_ctrl_stat.seng_min);
     break;
   case ACS_RMT:
     m_ctrl_stat.rud = map_oval(m_ctrl_stat.rud_rmc,
@@ -295,17 +273,6 @@ void f_sim_aws1::set_control_output()
 				m_ctrl_stat.meng_max, m_ctrl_stat.meng_nuf,
 				m_ctrl_stat.meng_nut, m_ctrl_stat.meng_nub,
 				m_ctrl_stat.meng_min);
-    m_ctrl_stat.seng = map_oval(m_ctrl_stat.seng_rmc,
-				m_ctrl_stat.seng_max_rmc,
-				m_ctrl_stat.seng_nuf_rmc,
-				m_ctrl_stat.seng_nut_rmc,
-				m_ctrl_stat.seng_nub_rmc,
-				m_ctrl_stat.seng_min_rmc,
-				m_ctrl_stat.seng_max,
-				m_ctrl_stat.seng_nuf,
-				m_ctrl_stat.seng_nut,
-				m_ctrl_stat.seng_nub,
-				m_ctrl_stat.seng_min);
     break;
   }
   if (m_ch_ctrl_stat_sim){
