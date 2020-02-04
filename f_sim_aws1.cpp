@@ -66,7 +66,7 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   register_fpar("yaw0", &m_sv_init.yaw, "Initial Yaw(deg)");
   register_fpar("cog0", &m_sv_init.cog, "Initial Course over ground(deg)");
   register_fpar("sog0", &m_sv_init.sog, "Initial Speed over ground(kts)");
-  register_fpar("meng0", &m_sv_init.eng, "Initial Engine control value");
+  register_fpar("eng0", &m_sv_init.eng, "Initial Engine control value");
   register_fpar("rud0", &m_sv_init.rud, "Initial Rudder control value");
   register_fpar("rev0", &m_sv_init.rev, "Initial Engine rev (RPM).");
   register_fpar("fuel0", &m_sv_init.fuel, "Initial fuel flow rate (L/h)");
@@ -74,14 +74,14 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   // for ch_ctrl
   // aws's control parameters
   register_fpar("awsrud", &m_ctrl_stat.rud_aws, "Control value of AWS1's rudder.");
-  register_fpar("awsmeng", &m_ctrl_stat.meng_aws, "Control value of AWS1's main engine.");
+  register_fpar("awseng", &m_ctrl_stat.eng_aws, "Control value of AWS1's main engine.");
    
   // Each control points of the main engine output.
-  register_fpar("meng_max", &m_ctrl_stat.meng_max, "Maximum control value for AWS1's main engine.");
-  register_fpar("meng_nuf", &m_ctrl_stat.meng_nuf, "Nutral to Forward control value for AWS1's main engine.");
-  register_fpar("meng_nut", &m_ctrl_stat.meng_nut, "Nutral control value for AWS1's main engine.");
-  register_fpar("meng_nub", &m_ctrl_stat.meng_nub, "Nutral to Backward control value for AWS1's main engine.");
-  register_fpar("meng_min", &m_ctrl_stat.meng_min, "Minimum control value for AWS1's main engine.");
+  register_fpar("eng_max", &m_ctrl_stat.eng_max, "Maximum control value for AWS1's main engine.");
+  register_fpar("eng_nuf", &m_ctrl_stat.eng_nuf, "Nutral to Forward control value for AWS1's main engine.");
+  register_fpar("eng_nut", &m_ctrl_stat.eng_nut, "Nutral control value for AWS1's main engine.");
+  register_fpar("eng_nub", &m_ctrl_stat.eng_nub, "Nutral to Backward control value for AWS1's main engine.");
+  register_fpar("eng_min", &m_ctrl_stat.eng_min, "Minimum control value for AWS1's main engine.");
   
 	// Each controll points of the rudder output.
   register_fpar("rud_max", &m_ctrl_stat.rud_max, "Maximum control value for AWS1's rudder.");
@@ -89,7 +89,7 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   register_fpar("rud_min", &m_ctrl_stat.rud_min, "Minimum control value for AWS1's rudder.");
   
 
-  register_fpar("meng", &m_ctrl_stat.meng, "Output value for main engine.");
+  register_fpar("eng", &m_ctrl_stat.eng, "Output value for main engine.");
   register_fpar("rud", &m_ctrl_stat.rud, "Output value for rudder.");
   
   m_fcsv_out[0] = '\0';
@@ -165,7 +165,7 @@ void f_sim_aws1::set_control_input()
 {
   // Control input selection
   // control input source is selected by ctrl_src parameter in ctrl_ui channel.
-  // meng_aws,  rud_aws are normalized control value to [0 255], their neutral value is 127.
+  // eng_aws,  rud_aws are normalized control value to [0 255], their neutral value is 127.
   s_aws1_ctrl_inst acp;
   if (m_ch_ctrl_ui)
     m_ch_ctrl_ui->get(acp);
@@ -175,20 +175,20 @@ void f_sim_aws1::set_control_input()
   switch (acp.ctrl_src){
   case ACS_UI:
     m_sv_cur.rud = (float)acp.rud_aws;
-    m_sv_cur.eng = (float)acp.meng_aws;
+    m_sv_cur.eng = (float)acp.eng_aws;
     break;
   case ACS_AP1:
     if (m_ch_ctrl_ap1){
       m_ch_ctrl_ap1->get(acp);
       m_sv_cur.rud = (float)acp.rud_aws;
-      m_sv_cur.eng = (float)acp.meng_aws;
+      m_sv_cur.eng = (float)acp.eng_aws;
     }
     break;
   case ACS_AP2:
     if (m_ch_ctrl_ap2){
       m_ch_ctrl_ap2->get(acp);
       m_sv_cur.rud = (float)acp.rud_aws;
-      m_sv_cur.eng = (float)acp.meng_aws;
+      m_sv_cur.eng = (float)acp.eng_aws;
     }
     break;
   default:
@@ -211,7 +211,7 @@ void f_sim_aws1::set_control_output()
   
   // control values are directry from previous update.
   m_ctrl_stat.ctrl_src = acp.ctrl_src;
-  m_ctrl_stat.meng_aws = max(min(255, (int)(m_sv_cur.eng)), 0);
+  m_ctrl_stat.eng_aws = max(min(255, (int)(m_sv_cur.eng)), 0);
   m_ctrl_stat.rud_aws = max(min(255, (int)(m_sv_cur.rud)), 0);
   
   switch (m_ctrl_stat.ctrl_src){
@@ -224,11 +224,11 @@ void f_sim_aws1::set_control_output()
 			       0xff, 0x7f, 0x00,
 			       m_ctrl_stat.rud_max, m_ctrl_stat.rud_nut,
 			       m_ctrl_stat.rud_min);
-    m_ctrl_stat.meng = map_oval(m_ctrl_stat.meng_aws,
+    m_ctrl_stat.eng = map_oval(m_ctrl_stat.eng_aws,
 				0xff, 0x7f + 0x19, 0x7f, 0x7f - 0x19, 0x00,
-				m_ctrl_stat.meng_max, m_ctrl_stat.meng_nuf,
-				m_ctrl_stat.meng_nut,
-				m_ctrl_stat.meng_nub, m_ctrl_stat.meng_min);
+				m_ctrl_stat.eng_max, m_ctrl_stat.eng_nuf,
+				m_ctrl_stat.eng_nut,
+				m_ctrl_stat.eng_nub, m_ctrl_stat.eng_min);
     break;
   }
   if (m_ch_ctrl_stat_sim){
@@ -327,7 +327,7 @@ void f_sim_aws1::set_output_state_vector()
   
   if (m_ch_ctrl_stat_sim)
     {
-      // output control stat meng, rud is from (directry from ctrl_ui, ctrl_ap1, ctrl_ap2), otherwise, from m_ctrl_stat
+      // output control stat eng, rud is from (directry from ctrl_ui, ctrl_ap1, ctrl_ap2), otherwise, from m_ctrl_stat
       set_control_output();
     }
 }
