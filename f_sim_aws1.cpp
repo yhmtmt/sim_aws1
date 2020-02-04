@@ -75,19 +75,7 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   // aws's control parameters
   register_fpar("awsrud", &m_ctrl_stat.rud_aws, "Control value of AWS1's rudder.");
   register_fpar("awsmeng", &m_ctrl_stat.meng_aws, "Control value of AWS1's main engine.");
-  
-  // remote controller's control parameters (Read Only)
-  register_fpar("rmcrud", &m_ctrl_stat.rud_rmc, "Control value of AWS1's rudder controller.");
-  register_fpar("rmcmeng", &m_ctrl_stat.meng_rmc, "Control value of AWS1's main engine controller.");
-  register_fpar("rud_sta", &m_ctrl_stat.rud_sta, "Rudder Status of AWS1's.");
-  
-  // Remote controllers control points of the main engine. 
-  register_fpar("meng_max_rmc", &m_ctrl_stat.meng_max_rmc, "Maximum control control value of AWS1's main engine controller.");
-  register_fpar("meng_nuf_rmc", &m_ctrl_stat.meng_nuf_rmc, "Nutral to Forward control value of AWS1's main engine controller.");
-  register_fpar("meng_nut_rmc", &m_ctrl_stat.meng_nut_rmc, "Nutral control value of AWS1's main engine controller.");
-  register_fpar("meng_nub_rmc", &m_ctrl_stat.meng_nub_rmc, "Nutral to Backward control value of AWS1's main engine controller.");
-  register_fpar("meng_min_rmc", &m_ctrl_stat.meng_min_rmc, "Minimum control value of AWS1's main engine controller.");
-  
+   
   // Each control points of the main engine output.
   register_fpar("meng_max", &m_ctrl_stat.meng_max, "Maximum control value for AWS1's main engine.");
   register_fpar("meng_nuf", &m_ctrl_stat.meng_nuf, "Nutral to Forward control value for AWS1's main engine.");
@@ -95,29 +83,14 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   register_fpar("meng_nub", &m_ctrl_stat.meng_nub, "Nutral to Backward control value for AWS1's main engine.");
   register_fpar("meng_min", &m_ctrl_stat.meng_min, "Minimum control value for AWS1's main engine.");
   
-  // Remote controller's control points of the rudder.
-  register_fpar("rud_max_rmc", &m_ctrl_stat.rud_max_rmc, "Maximum control value of AWS1's rudder controller.");
-  register_fpar("rud_nut_rmc", &m_ctrl_stat.rud_nut_rmc, "Nutral control value of AWS1's rudder controller.");
-  register_fpar("rud_min_rmc", &m_ctrl_stat.rud_min_rmc, "Minimum control value of AWS1's rudder controller.");
-  
 	// Each controll points of the rudder output.
   register_fpar("rud_max", &m_ctrl_stat.rud_max, "Maximum control value for AWS1's rudder.");
   register_fpar("rud_nut", &m_ctrl_stat.rud_nut, "Nutral control value for AWS1's rudder.");
   register_fpar("rud_min", &m_ctrl_stat.rud_min, "Minimum control value for AWS1's rudder.");
-
-  // Rudder indicator's controll points.
-  register_fpar("rud_sta_max", &m_ctrl_stat.rud_sta_max, "Maximum value of AWS1's rudder angle indicator.");
-  register_fpar("rud_sta_nut", &m_ctrl_stat.rud_sta_nut, "Nutral value of AWS1's rudder angle indicator.");
-  register_fpar("rud_sta_min", &m_ctrl_stat.rud_sta_min, "Minimum value of AWS1's rudder angle indicator.");
   
-  // Control points as the rudder indicator output.
-  register_fpar("rud_sta_out_max", &m_ctrl_stat.rud_sta_out_max, "Maximum output value of AWS1's rudder angle to rudder pump.");
-  register_fpar("rud_sta_out_nut", &m_ctrl_stat.rud_sta_out_nut, "Nutral output value of AWS1's rudder angle to rudder pump.");
-  register_fpar("rud_sta_out_min", &m_ctrl_stat.rud_sta_out_min, "Minimum output value of AWS1's rudder angle to rudder pump.");
 
   register_fpar("meng", &m_ctrl_stat.meng, "Output value for main engine.");
   register_fpar("rud", &m_ctrl_stat.rud, "Output value for rudder.");
-  register_fpar("rud_sta_out", &m_ctrl_stat.rud_sta_out, "Output value for rudder status.");
   
   m_fcsv_out[0] = '\0';
   register_fpar("fcsv", m_fcsv_out, 1024, "CSV output file.");
@@ -225,8 +198,6 @@ void f_sim_aws1::set_control_input()
   m_sv_cur.gear_pos = m_output_vectors[0].gear_pos;
   m_sv_cur.rud_pos = m_output_vectors[0].rud_pos;
   m_sv_cur.rud_slack = m_output_vectors[0].rud_slack;
-
-  //  m_sv_cur.print();
 }
 
 
@@ -258,21 +229,6 @@ void f_sim_aws1::set_control_output()
 				m_ctrl_stat.meng_max, m_ctrl_stat.meng_nuf,
 				m_ctrl_stat.meng_nut,
 				m_ctrl_stat.meng_nub, m_ctrl_stat.meng_min);
-    break;
-  case ACS_RMT:
-    m_ctrl_stat.rud = map_oval(m_ctrl_stat.rud_rmc,
-			       m_ctrl_stat.rud_max_rmc, m_ctrl_stat.rud_nut_rmc,
-			       m_ctrl_stat.rud_min_rmc,
-			       m_ctrl_stat.rud_max, m_ctrl_stat.rud_nut, m_ctrl_stat.rud_min);
-    m_ctrl_stat.meng = map_oval(m_ctrl_stat.meng_rmc,
-				m_ctrl_stat.meng_max_rmc,
-				m_ctrl_stat.meng_nuf_rmc,
-				m_ctrl_stat.meng_nut_rmc,
-				m_ctrl_stat.meng_nub_rmc,
-				m_ctrl_stat.meng_min_rmc,
-				m_ctrl_stat.meng_max, m_ctrl_stat.meng_nuf,
-				m_ctrl_stat.meng_nut, m_ctrl_stat.meng_nub,
-				m_ctrl_stat.meng_min);
     break;
   }
   if (m_ch_ctrl_stat_sim){
