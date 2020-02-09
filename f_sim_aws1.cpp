@@ -117,6 +117,7 @@ f_sim_aws1::f_sim_aws1(const char * name) :
 bool f_sim_aws1::init_run()
 {
   m_int_smpl = (unsigned int)(m_int_smpl_sec * SEC);
+  m_sv_cur.t = 0;
   
   init_input_sample();
   init_output_sample();
@@ -238,45 +239,61 @@ void f_sim_aws1::set_control_output()
 
 void f_sim_aws1::set_input_state_vector(const long long & tcur)
 {
+  long long tprev = m_sv_cur.t;
   m_sv_cur.t = tcur;
   if (m_state){
     long long t = 0;
-    float roll, pitch, yaw, cog, sog;
+    float roll, pitch, yaw, cog, sog, ryaw;
     double lat, lon;
+    
     m_state->get_attitude(t, roll, pitch, yaw);
     m_state->get_position(t, lat, lon);
     m_state->get_velocity(t, cog, sog);
     m_sv_cur.roll = roll * (PI / 180.f);
     m_sv_cur.pitch = pitch * (PI / 180.f);
-    m_sv_cur.yaw = yaw * (PI / 180.f);
     m_sv_cur.cog = cog * (PI / 180.f);
     m_sv_cur.sog = sog;
     m_sv_cur.lat = lat * (PI / 180.f);
     m_sv_cur.lon = lon * (PI / 180.f);
     m_sv_cur.update_coordinates();
+    if(tprev != 0){ // calculate yaw rate
+      yaw *= (PI / 180.f);
+      float yaw_prev = m_sv_cur.yaw;
+      double dyaw = yaw - yaw_prev;
+      if(dyaw > PI)
+	dyaw -= 2 * PI;
+      else if(dyaw < -PI)
+	dyaw += 2 * PI;
+      
+      m_sv_cur.ryaw = (double)(dyaw /((double)m_int_smpl / (double)SEC));
+      m_sv_cur.yaw = yaw;
+    }else{
+      m_sv_cur.yaw = yaw * (PI / 180.f);
+      m_sv_cur.ryaw = 0.f;
+    }	
   }
 
   if (m_engstate)
   {
-	  long long t = 0;
-	  unsigned char trim = 0;
-	  int poil = 0;
-	  float toil = 0.0f;
-	  float temp = 0.0f;
-	  float valt = 0.0f;
-	  float frate = 0.0f;
-	  unsigned int teng = 0;
-	  int pclnt = 0;
-	  int pfl = 0;
-	  unsigned char ld = 0;
-	  unsigned char tq = 0;
-	  StatEng1 steng1 = (StatEng1)(EmergencyStop + 1);
-	  StatEng2 steng2 = (StatEng2)(EngineShuttingDown + 1);
-
-	  m_engstate->get_rapid(t, m_sv_cur.rev, trim);
-	  m_engstate->get_dynamic(t, poil, toil, temp, valt, frate,
-				  teng, pclnt, pfl, steng1, steng2, ld, tq);
-	  m_sv_cur.fuel = frate;
+    long long t = 0;
+    unsigned char trim = 0;
+    int poil = 0;
+    float toil = 0.0f;
+    float temp = 0.0f;
+    float valt = 0.0f;
+    float frate = 0.0f;
+    unsigned int teng = 0;
+    int pclnt = 0;
+    int pfl = 0;
+    unsigned char ld = 0;
+    unsigned char tq = 0;
+    StatEng1 steng1 = (StatEng1)(EmergencyStop + 1);
+    StatEng2 steng2 = (StatEng2)(EngineShuttingDown + 1);
+    
+    m_engstate->get_rapid(t, m_sv_cur.rev, trim);
+    m_engstate->get_dynamic(t, poil, toil, temp, valt, frate,
+			    teng, pclnt, pfl, steng1, steng2, ld, tq);
+    m_sv_cur.fuel = frate;
   }
 
   set_control_input(); // select and load correct control values of correct source to msv_cur.rud and m_sv_cur.eng
@@ -395,7 +412,6 @@ void f_sim_aws1::update_output_sample(const long long & tcur)
     v[0] = sog_ms * cos(phi);
     v[1] = sog_ms * sin(phi);
     v[2] = stprev.ryaw;
-    
     mrctrl.update(stprev.rud, stprev.rud_pos, stprev.rud_slack, dt,
 		  stcur.rud_pos, stcur.rud_slack);
     mectrl.update(stprev.eng, stprev.gear_pos, stprev.thro_pos,
@@ -404,25 +420,28 @@ void f_sim_aws1::update_output_sample(const long long & tcur)
 
     if(v[0] < 0){
       // astern model
+      cout << "Mode:astern";
       mobfb.update((stprev.rud_pos - stprev.rud_slack),
 		  stprev.gear_pos, stprev.thro_pos,
 		  stprev.rev, v, f);
       m3dofb.update(v, f, dt, v);
     }else if(v[0] < vplane){
       // displacement model
+      cout << "Mode:disp";
       mobf.update((stprev.rud_pos - stprev.rud_slack),
 		  stprev.gear_pos, stprev.thro_pos,
 		  stprev.rev, v, f);
       m3dof.update(v, f, dt, v);
     }
     else{
+      cout << "Mode:pln";
       // planing model
       mobfp.update((stprev.rud_pos - stprev.rud_slack),
 		   stprev.gear_pos, stprev.thro_pos,
 		   stprev.rev, v, f);
       m3dofp.update(v, f, dt, v);
     }
-  
+
     phi = atan2(v[1], v[0]);
     stcur.yaw += v[2] * dt;
     if(stcur.yaw > PI)
@@ -436,7 +455,6 @@ void f_sim_aws1::update_output_sample(const long long & tcur)
       stcur.cog += 2 * PI;
     else if(stcur.cog > 2 *PI)
       stcur.cog -= 2 * PI;
-    
     stcur.sog = sqrt(v[0] * v[0] + v[1] * v[1]) * (3600. / 1852.);
   }
 }
