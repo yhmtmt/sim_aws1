@@ -38,7 +38,7 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   m_state(NULL), m_ch_ctrl_ui(NULL), m_ch_ctrl_ap1(NULL), m_ch_ctrl_ap2(NULL),
   m_ch_ctrl_stat(NULL),
   m_state_sim(NULL), m_engstate_sim(NULL), m_ch_ctrl_stat_sim(NULL),
-  m_tprev(0), m_bcsv_out(false), m_int_smpl_sec(0.1), m_wismpl(100), m_wosmpl(1), bupdate_model_params(true)
+  m_tprev(0), m_bcsv_out(false), m_int_smpl_sec(0.03333333), m_wismpl(100), m_wosmpl(1), bupdate_model_params(true)
 {
 	// input channels for simulation results
   register_fpar("ch_state", (ch_base**)&m_state, typeid(ch_state).name(), "State channel");
