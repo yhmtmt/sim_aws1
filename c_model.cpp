@@ -486,7 +486,7 @@ void c_model_outboard_force::update(const double _rud, const double _gear,
   
   // calculate x, y thrust force T(v, rev), and
   // decompose Tx = T cos phi, Ty=T sin phi
-  double T = (CTL * vr * _rev)  + (CTQ * _rev * _rev) * g;
+  double T = ((CTL * vr * _rev)  + (CTQ * _rev * _rev)) * g;
   double Tx = nrx * T, Ty = nry * T;
   
   // flow to rudder angle psi
