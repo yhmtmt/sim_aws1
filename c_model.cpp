@@ -156,6 +156,7 @@ void c_model_3dof::update(double * _v,
   Eigen::Vector3d R3 = M.inverse() * R2;
   Eigen::Vector3d R4 = R3 * dt;
   Vnext = V + R4;
+  /*
   cout << "V:" << V << endl;
   cout << "Vnext:" << Vnext << endl;
   cout << "T:" << T << endl;
@@ -169,6 +170,7 @@ void c_model_3dof::update(double * _v,
   cout << "R3:" << R3 << endl;
   cout << "R4:" << R4 << endl;
   cout << "dt:" << dt << endl;
+  */
   // Updating velocity
   _vnew[0] = Vnext(0);
   _vnew[1] = Vnext(1);
