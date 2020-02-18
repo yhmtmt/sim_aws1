@@ -420,21 +420,18 @@ void f_sim_aws1::update_output_sample(const long long & tcur)
 
     if(v[0] < 0){
       // astern model
-      cout << "Mode:astern";
       mobfb.update((stprev.rud_pos - stprev.rud_slack),
 		  stprev.gear_pos, stprev.thro_pos,
 		  stprev.rev, v, f);
       m3dofb.update(v, f, dt, v);
     }else if(v[0] < vplane){
       // displacement model
-      cout << "Mode:disp";
       mobf.update((stprev.rud_pos - stprev.rud_slack),
 		  stprev.gear_pos, stprev.thro_pos,
 		  stprev.rev, v, f);
       m3dof.update(v, f, dt, v);
     }
     else{
-      cout << "Mode:pln";
       // planing model
       mobfp.update((stprev.rud_pos - stprev.rud_slack),
 		   stprev.gear_pos, stprev.thro_pos,
