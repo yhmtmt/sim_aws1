@@ -250,12 +250,7 @@ void f_sim_aws1::set_input_state_vector(const long long & tcur)
     if(tprev != 0){ // calculate yaw rate
       yaw *= (PI / 180.f);
       float yaw_prev = m_sv_cur.yaw;
-      double dyaw = yaw - yaw_prev;
-      if(dyaw > PI)
-	dyaw -= 2 * PI;
-      else if(dyaw < -PI)
-	dyaw += 2 * PI;
-      
+      double dyaw = normalize_angle_rad(yaw - yaw_prev);
       m_sv_cur.ryaw = (double)(dyaw /((double)m_int_smpl / (double)SEC));
       m_sv_cur.yaw = yaw;
     }else{
