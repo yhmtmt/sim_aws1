@@ -38,7 +38,7 @@ protected:
   ch_state * m_state;
   ch_eng_state * m_engstate;
   ch_aws1_ctrl_stat * m_ch_ctrl_stat;
-  ch_aws1_ctrl_inst * m_ch_ctrl_ui, *m_ch_ctrl_ap1, *m_ch_ctrl_ap2;
+  ch_aws1_ctrl_inst * m_ch_ctrl_ui, *m_ch_ctrl_ap;
   
   s_aws1_ctrl_stat m_ctrl_stat;
   

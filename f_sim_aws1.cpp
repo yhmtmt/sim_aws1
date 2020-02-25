@@ -35,7 +35,7 @@ DEFINE_FILTER(f_sim_aws1)
 
 f_sim_aws1::f_sim_aws1(const char * name) :
   f_base(name), vplane(10.0),
-  m_state(NULL), m_ch_ctrl_ui(NULL), m_ch_ctrl_ap1(NULL), m_ch_ctrl_ap2(NULL),
+  m_state(NULL), m_ch_ctrl_ui(NULL), m_ch_ctrl_ap(NULL),
   m_ch_ctrl_stat(NULL),
   m_state_sim(NULL), m_engstate_sim(NULL), m_ch_ctrl_stat_sim(NULL),
   m_tprev(0), m_bcsv_out(false), m_int_smpl_sec(0.03333333), m_wismpl(100), m_wosmpl(1), bupdate_model_params(true)
@@ -46,8 +46,7 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   register_fpar("ch_ctrl_stat", (ch_base**)&m_ch_ctrl_stat, typeid(ch_aws1_ctrl_stat).name(), "Control output channel.");
 
   register_fpar("ch_ctrl_ui", (ch_base**)&m_ch_ctrl_ui, typeid(ch_aws1_ctrl_inst).name(), "Control input channel.");
-  register_fpar("ch_ctrl_ap1", (ch_base**)&m_ch_ctrl_ap1, typeid(ch_aws1_ctrl_inst).name(), "Autopilot 1 control input channel.");
-  register_fpar("ch_ctrl_ap2", (ch_base**)&m_ch_ctrl_ap2, typeid(ch_aws1_ctrl_inst).name(), "Autopilot 2 control input channel.");
+  register_fpar("ch_ctrl_ap", (ch_base**)&m_ch_ctrl_ap, typeid(ch_aws1_ctrl_inst).name(), "Autopilot 1 control input channel.");
 
   // output channels for simulation results
   register_fpar("ch_state_sim", (ch_base**)&m_state_sim, typeid(ch_state).name(), "State channel");
@@ -178,16 +177,9 @@ void f_sim_aws1::set_control_input()
     m_sv_cur.rud = (float)acp.rud_aws;
     m_sv_cur.eng = (float)acp.eng_aws;
     break;
-  case ACS_AP1:
-    if (m_ch_ctrl_ap1){
-      m_ch_ctrl_ap1->get(acp);
-      m_sv_cur.rud = (float)acp.rud_aws;
-      m_sv_cur.eng = (float)acp.eng_aws;
-    }
-    break;
-  case ACS_AP2:
-    if (m_ch_ctrl_ap2){
-      m_ch_ctrl_ap2->get(acp);
+  case ACS_AP:
+    if (m_ch_ctrl_ap){
+      m_ch_ctrl_ap->get(acp);
       m_sv_cur.rud = (float)acp.rud_aws;
       m_sv_cur.eng = (float)acp.eng_aws;
     }
@@ -217,8 +209,7 @@ void f_sim_aws1::set_control_output()
   
   switch (m_ctrl_stat.ctrl_src){
   case ACS_UI:
-  case ACS_AP1:
-  case ACS_AP2:
+  case ACS_AP:
   case ACS_FSET:
   case ACS_NONE:
     m_ctrl_stat.rud = map_oval(m_ctrl_stat.rud_aws,
@@ -344,7 +335,7 @@ void f_sim_aws1::set_output_state_vector()
   
   if (m_ch_ctrl_stat_sim)
     {
-      // output control stat eng, rud is from (directry from ctrl_ui, ctrl_ap1, ctrl_ap2), otherwise, from m_ctrl_stat
+      // output control stat eng, rud is from (directry from ctrl_ui, ctrl_ap), otherwise, from m_ctrl_stat
       set_control_output();
     }
 }
