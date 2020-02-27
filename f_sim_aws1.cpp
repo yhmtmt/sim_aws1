@@ -22,9 +22,6 @@
 #include <map>
 using namespace std;
 
-#include <Eigen/Core>
-#include <Eigen/LU>
-
 #include "aws_coord.hpp"
 
 #include "f_sim_aws1.hpp"
