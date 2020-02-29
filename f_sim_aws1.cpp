@@ -376,6 +376,7 @@ void f_sim_aws1::update_output_sample(const long long & tcur)
     s_state_vector & stprev =
       (iosv == 0 ? m_input_vectors[m_iv_head] : m_output_vectors[iosv-1]);
     s_state_vector & stcur = m_output_vectors[iosv];
+    stcur.t = tcur + iosv * m_int_smpl;
     
     // simulate actuator and pump  
     double v[3];
