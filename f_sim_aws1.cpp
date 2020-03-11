@@ -170,11 +170,11 @@ void f_sim_aws1::set_control_input()
     return;
   
   switch (acp.ctrl_src){
-  case ACS_UI:
+  case ControlSource_UI:
     m_sv_cur.rud = (float)acp.rud_aws;
     m_sv_cur.eng = (float)acp.eng_aws;
     break;
-  case ACS_AP:
+  case ControlSource_AP:
     if (m_ch_ctrl_ap){
       m_ch_ctrl_ap->get(acp);
       m_sv_cur.rud = (float)acp.rud_aws;
@@ -205,10 +205,10 @@ void f_sim_aws1::set_control_output()
   m_ctrl_stat.rud_aws = max(min(255, (int)(m_sv_cur.rud)), 0);
   
   switch (m_ctrl_stat.ctrl_src){
-  case ACS_UI:
-  case ACS_AP:
-  case ACS_FSET:
-  case ACS_NONE:
+  case ControlSource_UI:
+  case ControlSource_AP:
+  case ControlSource_FSET:
+  case ControlSource_NONE:
     m_ctrl_stat.rud = map_oval(m_ctrl_stat.rud_aws,
 			       0xff, 0x7f, 0x00,
 			       m_ctrl_stat.rud_max, m_ctrl_stat.rud_nut,
