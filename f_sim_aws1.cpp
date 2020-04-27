@@ -270,8 +270,10 @@ void f_sim_aws1::set_input_state_vector(const long long & tcur)
     int pfl = 0;
     unsigned char ld = 0;
     unsigned char tq = 0;
-    StatEng1 steng1 = (StatEng1)(EmergencyStop + 1);
-    StatEng2 steng2 = (StatEng2)(EngineShuttingDown + 1);
+    NMEA2000::EngineStatus1 steng1 =
+      (NMEA2000::EngineStatus1)(NMEA2000::EngineStatus1_MAX + 1);
+    NMEA2000::EngineStatus2 steng2 =
+      (NMEA2000::EngineStatus2)(NMEA2000::EngineStatus2_MAX + 1);
     
     m_engstate->get_rapid(t, m_sv_cur.rev, trim);
     m_engstate->get_dynamic(t, poil, toil, temp, valt, frate,
@@ -302,8 +304,10 @@ void f_sim_aws1::set_output_state_vector()
       int pfl = 0;
       unsigned char ld = 0;
       unsigned char tq = 0;
-      StatEng1 steng1 = (StatEng1)(EmergencyStop + 1);
-      StatEng2 steng2 = (StatEng2)(EngineShuttingDown + 1);
+      NMEA2000::EngineStatus1 steng1 =
+	(NMEA2000::EngineStatus1)(NMEA2000::EngineStatus1_MAX + 1);
+      NMEA2000::EngineStatus2 steng2 =
+	(NMEA2000::EngineStatus2)(NMEA2000::EngineStatus2_MAX + 1);
       
       // overwrite only rev 
       m_engstate->get_rapid(t, rev, trim); 
