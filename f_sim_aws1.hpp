@@ -37,15 +37,20 @@ protected:
   // input channels
   ch_state * m_state;
   ch_eng_state * m_engstate;
-  ch_aws1_ctrl_stat * m_ch_ctrl_stat;
-  ch_aws1_ctrl_inst * m_ch_ctrl_ui, *m_ch_ctrl_ap;
   
-  s_aws1_ctrl_stat m_ctrl_stat;
+  unsigned char eng_max, eng_nuf, eng_nut, eng_nub, eng_min,
+    rud_max, rud_nut, rud_min;
+  
+  ch_ctrl_data * m_ch_ctrl_out;         // (ui<-autopilot<-sim)
+  ch_ctrl_data * m_ch_ctrl_in;          // (ui->autopilot->sim)
+  unsigned char buf[64];
+  size_t buf_len;
+  flatbuffers::FlatBufferBuilder builder;
+  Control::Config config;
   
   // output channels
   ch_state * m_state_sim;
   ch_eng_state * m_engstate_sim;
-  ch_aws1_ctrl_stat * m_ch_ctrl_stat_sim;
   
   struct s_state_vector
   {
@@ -113,8 +118,8 @@ protected:
   // time of previous sampling 
   long long m_tprev;
   
-  void set_control_input();
-  void set_control_output();
+  void get_inst();
+  void set_stat();
   void set_input_state_vector(const long long & tcur);
   void set_output_state_vector();
   
