@@ -18,8 +18,7 @@
 #include "filter_base.hpp"
 #include "ch_state.hpp"
 #include "ch_aws1_ctrl.hpp"
-
-#define RUD_PER_CYCLE 0.45f
+#include "ch_nmea.hpp"
 
 #include "c_model.hpp"
 
@@ -51,6 +50,13 @@ protected:
   // output channels
   ch_state * m_state_sim;
   ch_eng_state * m_engstate_sim;
+
+  ch_nmea * m_gps_nmea;
+  char nmea_buf[84];
+  c_gga gga_enc;
+  c_vtg vtg_enc;
+  c_psat_hpr psat_hpr_enc;
+  ch_n2k_data * m_eng_n2k_data;
   
   struct s_state_vector
   {

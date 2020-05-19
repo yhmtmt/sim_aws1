@@ -35,6 +35,7 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   m_state(NULL), 
   m_ch_ctrl_out(nullptr), m_ch_ctrl_in(nullptr),
   m_state_sim(nullptr), m_engstate_sim(nullptr),
+  m_gps_nmea(nullptr), m_eng_n2k_data(nullptr), 
   m_tprev(0), m_bcsv_out(false), m_int_smpl_sec(0.03333333),
   m_wismpl(100), m_wosmpl(1), bupdate_model_params(true)
 {
@@ -47,6 +48,10 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   // output channels for simulation results
   register_fpar("ch_state_sim", (ch_base**)&m_state_sim,
 		typeid(ch_state).name(), "State channel");
+  register_fpar("ch_gps_nmea", (ch_base**)&m_gps_nmea,
+		typeid(ch_nmea).name(), "GPS NMEA0183 output channel.");
+  register_fpar("ch_eng_n2k_data", (ch_base**)&m_eng_n2k_data,
+		typeid(ch_n2k_data).name(), "Decoded Engine N2K data channel.");
   register_fpar("ch_engstate_sim", (ch_base**)&m_engstate_sim,
 		typeid(ch_eng_state).name(), "Engine Status channel");  
   register_fpar("ch_ctrl_out", (ch_base**)&m_ch_ctrl_out,
@@ -279,38 +284,79 @@ void f_sim_aws1::set_input_state_vector(const long long & tcur)
 void f_sim_aws1::set_output_state_vector()
 {
   s_state_vector sv = m_output_vectors[0];
-  if (m_engstate_sim)
-    {
-      // output simulated engine state
-      long long t = 0;
-      unsigned char trim = 0;
-      int poil = 0;
-      float toil = 0.0f;
-      float temp = 0.0f;
-      float valt = 0.0f;
-      float frate = 0.0f;
-      float rev = 0.0f;
-      unsigned int teng = 0;
-      int pclnt = 0;
-      int pfl = 0;
-      unsigned char ld = 0;
-      unsigned char tq = 0;
-      NMEA2000::EngineStatus1 steng1 =
-	(NMEA2000::EngineStatus1)(NMEA2000::EngineStatus1_MAX + 1);
-      NMEA2000::EngineStatus2 steng2 =
-	(NMEA2000::EngineStatus2)(NMEA2000::EngineStatus2_MAX + 1);
-      
-      // overwrite only rev 
-      m_engstate->get_rapid(t, rev, trim); 
-            m_engstate_sim->set_rapid(sv.t, sv.rev, trim);
-      
-      // overwrite only frate
-      m_engstate->get_dynamic(t, poil, toil, temp, valt, frate,
-			      teng, pclnt, pfl, steng1, steng2, ld, tq);
-      m_engstate_sim->set_dynamic(sv.t, poil, toil, temp, valt, sv.fuel,
-      				  teng, pclnt, pfl, steng1, steng2, ld, tq);
+  {
+    // output simulated engine state
+    long long t = 0;
+    unsigned char trim = 0;
+    int poil = 0;
+    float toil = 0.0f;
+    float temp = 0.0f;
+    float valt = 0.0f;
+    float frate = 0.0f;
+    float rev = 0.0f;
+    unsigned int teng = 0;
+    int pclnt = 0;
+    int pfl = 0;
+    unsigned char ld = 0;
+    unsigned char tq = 0;
+    NMEA2000::EngineStatus1 steng1 =
+      (NMEA2000::EngineStatus1)(NMEA2000::EngineStatus1_MAX + 1);
+    NMEA2000::EngineStatus2 steng2 =
+      (NMEA2000::EngineStatus2)(NMEA2000::EngineStatus2_MAX + 1);
+    
+    if (m_engstate_sim)
+      {	
+	// overwrite only rev 
+	m_engstate->get_rapid(t, rev, trim); 
+	m_engstate_sim->set_rapid(sv.t, sv.rev, trim);
+	
+	// overwrite only frate
+	m_engstate->get_dynamic(t, poil, toil, temp, valt, frate,
+				teng, pclnt, pfl, steng1, steng2, ld, tq);
+	m_engstate_sim->set_dynamic(sv.t, poil, toil, temp, valt, sv.fuel,
+				    teng, pclnt, pfl, steng1, steng2, ld, tq);
+      }
+    
+    if(m_eng_n2k_data){
+      {
+	builder.Clear();
+	auto payload =
+	  builder.CreateStruct(NMEA2000::EngineParametersRapidUpdate((NMEA2000::EngineInstance)0, (unsigned short) (rev * 4), (unsigned short)0, (char)trim));
+	auto data = CreateData(builder,
+			       get_time(),
+			       NMEA2000::Payload_EngineParametersRapidUpdate,
+			       payload.Union());
+	builder.Finish(data);
+	m_eng_n2k_data->push(builder.GetBufferPointer(), builder.GetSize());
+      }
+      {
+	builder.Clear();
+	auto payload =
+	  builder.CreateStruct(NMEA2000::EngineParametersDynamic((NMEA2000::EngineInstance)0,
+								 (unsigned short)poil, /* oil pressure */
+								 (unsigned short)toil, /* oil temperature */
+								 (unsigned short)temp, /* temperature */
+								 (unsigned short)(valt * 100), /* alternatorPotential */
+								 (short) sv.fuel, /* fuel rate */
+								 (unsigned int) teng, /* total engine hours */
+								 (unsigned short) pclnt, /* coolant pressure */
+								 (unsigned short) pfl, /* fuel pressure */
+								 (NMEA2000::EngineStatus1) steng1, /* engine status 1 */
+								 (NMEA2000::EngineStatus2) steng2, /* engine status 2 */
+								 (char) ld, /* percent engine load */
+								 (char) tq /* percent engine torque */
+								 ));
+	auto data = CreateData(builder,
+			       get_time(),
+			       NMEA2000::Payload_EngineParametersDynamic,
+			       payload.Union());
+	builder.Finish(data);
+	m_eng_n2k_data->push(builder.GetBufferPointer(), builder.GetSize());
+      }
     }
-  
+  }
+
+
   if (m_state_sim)
     {
       float alt = 0.f, galt = 0.f;
@@ -322,6 +368,48 @@ void f_sim_aws1::set_output_state_vector()
       m_state_sim->set_velocity(sv.t, sv.cog * (180.f / PI), sv.sog);
     }
 
+  if(m_gps_nmea){
+    tmex tm;
+    gmtimeex(get_time() / MSEC, tm);
+    gga_enc.m_toker[0] = 'G';
+    gga_enc.m_toker[1] = 'P';
+    gga_enc.m_h = tm.tm_hour;
+    gga_enc.m_m = tm.tm_min;
+    gga_enc.m_s = (float)((double)(tm.tm_sec * 1000 + tm.tm_msec) * 0.001);
+    gga_enc.m_lat_deg = sv.lat * (180.f / PI);
+    gga_enc.m_lon_deg = sv.lon * (180.f / PI);
+    gga_enc.m_alt = 0.0f;
+    gga_enc.m_geos = 0.0f;
+    gga_enc.m_hdop = 0.0f;
+    gga_enc.m_dgps_age = 0.0f;
+    gga_enc.m_dgps_station = 0;
+    gga_enc.m_fix_status = NMEA0183::GPSFixStatus_GPSF;
+    if(gga_enc.encode(nmea_buf))
+      m_gps_nmea->push(nmea_buf);
+
+    vtg_enc.m_toker[0] = 'G';
+    vtg_enc.m_toker[1] = 'P';
+    vtg_enc.fs = NMEA0183::GPSFixStatus_GPSF;
+    vtg_enc.crs_t = (float)(sv.cog * (180.f / PI));
+    vtg_enc.crs_m = 0.0f;
+    vtg_enc.v_n = sv.sog;
+    vtg_enc.v_k = sv.sog * 1.852;
+    if(vtg_enc.encode(nmea_buf))
+      m_gps_nmea->push(nmea_buf);
+
+    psat_hpr_enc.m_toker[0] = 'P';
+    psat_hpr_enc.m_toker[1] = 'S';
+    psat_hpr_enc.hour = gga_enc.m_h;
+    psat_hpr_enc.mint = gga_enc.m_m;
+    psat_hpr_enc.sec = gga_enc.m_s;
+    psat_hpr_enc.hdg = sv.yaw * (180.f / PI);
+    psat_hpr_enc.roll = sv.roll * (180.f / PI);
+    psat_hpr_enc.pitch = sv.pitch * (180.f / PI);
+    psat_hpr_enc.gyro = false;
+    if(psat_hpr_enc.encode(nmea_buf))
+      m_gps_nmea->push(nmea_buf);
+  }
+  
   set_stat();
 }
 
