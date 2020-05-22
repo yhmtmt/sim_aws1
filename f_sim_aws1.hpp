@@ -52,11 +52,17 @@ protected:
   ch_eng_state * m_engstate_sim;
 
   ch_nmea * m_gps_nmea;
+  float cycle_gps_report_sec;
+  unsigned int cycle_gps_report;
+  long long tgps_report;
   char nmea_buf[84];
   c_gga gga_enc;
   c_vtg vtg_enc;
   c_psat_hpr psat_hpr_enc;
   ch_n2k_data * m_eng_n2k_data;
+  float cycle_eng_report_sec;
+  unsigned int cycle_eng_report;
+  long long teng_report;
   
   struct s_state_vector
   {
@@ -127,7 +133,7 @@ protected:
   void get_inst();
   void set_stat();
   void set_input_state_vector(const long long & tcur);
-  void set_output_state_vector();
+  void set_output_state_vector(const long long & tcur);
   
   void simulate(const long long tcur, const int iosv);
   void simulate_rudder(const float rud, const float rud_pos, float & rud_pos_next);

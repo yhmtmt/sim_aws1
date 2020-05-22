@@ -35,9 +35,10 @@ f_sim_aws1::f_sim_aws1(const char * name) :
   m_state(NULL), 
   m_ch_ctrl_out(nullptr), m_ch_ctrl_in(nullptr),
   m_state_sim(nullptr), m_engstate_sim(nullptr),
-  m_gps_nmea(nullptr), m_eng_n2k_data(nullptr), 
+  m_gps_nmea(nullptr), m_eng_n2k_data(nullptr),
+  cycle_gps_report_sec(0.1), cycle_eng_report_sec(0.1),
   m_tprev(0), m_bcsv_out(false), m_int_smpl_sec(0.03333333),
-  m_wismpl(100), m_wosmpl(1), bupdate_model_params(true)
+  m_wismpl(100), m_wosmpl(1), bupdate_model_params(true), builder(256)
 {
 	// input channels for simulation results
   register_fpar("ch_state", (ch_base**)&m_state,
@@ -58,10 +59,13 @@ f_sim_aws1::f_sim_aws1(const char * name) :
 		typeid(ch_ctrl_data).name(), "Control data out (to autopilot)");
   register_fpar("ch_ctrl_in", (ch_base**)&m_ch_ctrl_in,
 		typeid(ch_ctrl_data).name(), "Control data in (from autopilot)");
-  register_fpar("int_smpl", &m_int_smpl_sec, "Sampling interval in second");
+  register_fpar("int_smpl", &m_int_smpl_sec, "Sampling interval in second");  
   register_fpar("wismpl", &m_wismpl, "Width of input sampling window");
   register_fpar("wosmpl", &m_wosmpl, "Width of output sampling window");
-
+  register_fpar("cycle_gps_report", &cycle_gps_report_sec,
+		"GPS nmea report interval in second.");
+  register_fpar("cycle_eng_report", &cycle_eng_report_sec,
+		"Engine n2k report interval in second.");
   // initial values of input vector
   register_fpar("lat0", &m_sv_init.lat, "Initial Latitude(deg)");
   register_fpar("lon0", &m_sv_init.lon, "Initial Longitude(deg)");
@@ -121,7 +125,10 @@ f_sim_aws1::f_sim_aws1(const char * name) :
 bool f_sim_aws1::init_run()
 {
   m_int_smpl = (unsigned int)(m_int_smpl_sec * SEC);
+  cycle_gps_report_sec = (unsigned int)(cycle_gps_report * SEC);
+  cycle_eng_report_sec = (unsigned int)(cycle_eng_report * SEC);
   m_sv_cur.t = 0;
+  tgps_report = teng_report = 0;
   
   init_input_sample();
   init_output_sample();
@@ -281,7 +288,7 @@ void f_sim_aws1::set_input_state_vector(const long long & tcur)
 }
 
 
-void f_sim_aws1::set_output_state_vector()
+void f_sim_aws1::set_output_state_vector(const long long & tcur)
 {
   s_state_vector sv = m_output_vectors[0];
   {
@@ -317,11 +324,11 @@ void f_sim_aws1::set_output_state_vector()
 				    teng, pclnt, pfl, steng1, steng2, ld, tq);
       }
     
-    if(m_eng_n2k_data){
+    if(m_eng_n2k_data && (teng_report + cycle_eng_report <= tcur)){
       {
 	builder.Clear();
 	auto payload =
-	  builder.CreateStruct(NMEA2000::EngineParametersRapidUpdate((NMEA2000::EngineInstance)0, (unsigned short) (rev * 4), (unsigned short)0, (char)trim));
+	  builder.CreateStruct(NMEA2000::EngineParametersRapidUpdate((NMEA2000::EngineInstance)0, (unsigned short) (sv.rev * 4), (unsigned short)0, (char)trim));
 	auto data = CreateData(builder,
 			       get_time(),
 			       NMEA2000::Payload_EngineParametersRapidUpdate,
@@ -354,6 +361,7 @@ void f_sim_aws1::set_output_state_vector()
 	m_eng_n2k_data->push(builder.GetBufferPointer(), builder.GetSize());
       }
     }
+    teng_report = tcur;
   }
 
 
@@ -368,7 +376,7 @@ void f_sim_aws1::set_output_state_vector()
       m_state_sim->set_velocity(sv.t, sv.cog * (180.f / PI), sv.sog);
     }
 
-  if(m_gps_nmea){
+  if(m_gps_nmea && (tgps_report + cycle_gps_report <= tcur)){
     tmex tm;
     gmtimeex(get_time() / MSEC, tm);
     gga_enc.m_toker[0] = 'G';
@@ -384,6 +392,7 @@ void f_sim_aws1::set_output_state_vector()
     gga_enc.m_dgps_age = 0.0f;
     gga_enc.m_dgps_station = 0;
     gga_enc.m_fix_status = NMEA0183::GPSFixStatus_GPSF;
+
     if(gga_enc.encode(nmea_buf))
       m_gps_nmea->push(nmea_buf);
 
@@ -394,6 +403,7 @@ void f_sim_aws1::set_output_state_vector()
     vtg_enc.crs_m = 0.0f;
     vtg_enc.v_n = sv.sog;
     vtg_enc.v_k = sv.sog * 1.852;
+
     if(vtg_enc.encode(nmea_buf))
       m_gps_nmea->push(nmea_buf);
 
@@ -406,8 +416,11 @@ void f_sim_aws1::set_output_state_vector()
     psat_hpr_enc.roll = sv.roll * (180.f / PI);
     psat_hpr_enc.pitch = sv.pitch * (180.f / PI);
     psat_hpr_enc.gyro = false;
+
     if(psat_hpr_enc.encode(nmea_buf))
       m_gps_nmea->push(nmea_buf);
+
+    tgps_report = tcur;
   }
   
   set_stat();
@@ -585,7 +598,7 @@ bool f_sim_aws1::proc()
     return true;
   
   update_output_sample(tcur);
-  set_output_state_vector();
+  set_output_state_vector(tcur);
   
   set_input_state_vector(tcur);
   update_input_sample();
