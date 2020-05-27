@@ -43,7 +43,7 @@ protected:
   ch_ctrl_data * m_ch_ctrl_out;         // (ui<-autopilot<-sim)
   ch_ctrl_data * m_ch_ctrl_in;          // (ui->autopilot->sim)
   unsigned char buf[64];
-  size_t buf_len;
+  unsigned int buf_len;
   flatbuffers::FlatBufferBuilder builder;
   Control::Config config;
   
