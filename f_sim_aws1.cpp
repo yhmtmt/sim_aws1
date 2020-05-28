@@ -192,7 +192,18 @@ void f_sim_aws1::get_inst()
 	if(m_ch_ctrl_out) m_ch_ctrl_out->push(buf, buf_len);	
 	break;
       case Control::Payload_Config:
-	config = *data->payload_as_Config();
+	{
+	  auto config = data->payload_as_Config();
+	  if(eng_max == config->engine_max() && 
+	     eng_min == config->engine_min() &&
+	     eng_nut == config->engine_nutral() && 
+	     eng_nuf == config->engine_forward() &&
+	     eng_nub == config->engine_backward() &&
+	     rud_max == config->rudder_max() &&
+	     rud_nut == config->rudder_mid() &&
+	     rud_min == config->rudder_min())
+	    bconfig = true;
+	}	
 	break;
       }
     }
@@ -206,20 +217,12 @@ void f_sim_aws1::get_inst()
 
 void f_sim_aws1::set_stat()
 {
-  if(m_ch_ctrl_out &&
-     (config.engine_max() != eng_max ||
-      config.engine_min() != eng_min ||
-      config.engine_nutral() != eng_nut ||
-      config.engine_forward() != eng_nuf ||
-      config.engine_backward() != eng_nub ||
-      config.rudder_max() != rud_max ||
-      config.rudder_min() != rud_min ||
-      config.rudder_mid() != rud_nut)){
+  if(m_ch_ctrl_out && !bconfig){
     builder.Clear();
-    auto payload = builder.CreateStruct(Control::Config(eng_max, eng_nuf,
-							eng_nut, eng_nub,
-							eng_min, rud_max,
-							rud_nut, rud_min));
+    auto payload = Control::CreateConfig(builder, eng_max, eng_nuf,
+					 eng_nut, eng_nub,
+					 eng_min, rud_max,
+					 rud_nut, rud_min);
     auto data = CreateData(builder, get_time(),
 			   Control::Payload_Config, payload.Union());
     builder.Finish(data);
@@ -328,7 +331,7 @@ void f_sim_aws1::set_output_state_vector(const long long & tcur)
       {
 	builder.Clear();
 	auto payload =
-	  builder.CreateStruct(NMEA2000::EngineParametersRapidUpdate((NMEA2000::EngineInstance)0, (unsigned short) (sv.rev * 4), (unsigned short)0, (char)trim));
+	  NMEA2000::CreateEngineParametersRapidUpdate(builder, (NMEA2000::EngineInstance)0, (unsigned short) (sv.rev * 4), (unsigned short)0, (char)trim);
 	auto data = CreateData(builder,
 			       get_time(),
 			       NMEA2000::Payload_EngineParametersRapidUpdate,
@@ -338,21 +341,21 @@ void f_sim_aws1::set_output_state_vector(const long long & tcur)
       }
       {
 	builder.Clear();
-	auto payload =
-	  builder.CreateStruct(NMEA2000::EngineParametersDynamic((NMEA2000::EngineInstance)0,
-								 (unsigned short)poil, /* oil pressure */
-								 (unsigned short)toil, /* oil temperature */
-								 (unsigned short)temp, /* temperature */
-								 (unsigned short)(valt * 100), /* alternatorPotential */
-								 (short) sv.fuel, /* fuel rate */
-								 (unsigned int) teng, /* total engine hours */
-								 (unsigned short) pclnt, /* coolant pressure */
-								 (unsigned short) pfl, /* fuel pressure */
-								 (NMEA2000::EngineStatus1) steng1, /* engine status 1 */
-								 (NMEA2000::EngineStatus2) steng2, /* engine status 2 */
-								 (char) ld, /* percent engine load */
-								 (char) tq /* percent engine torque */
-								 ));
+	auto payload = NMEA2000::CreateEngineParametersDynamic(builder,
+							       (NMEA2000::EngineInstance)0,
+							       (unsigned short)poil, /* oil pressure */
+							       (unsigned short)toil, /* oil temperature */
+							       (unsigned short)temp, /* temperature */
+							       (unsigned short)(valt * 100), /* alternatorPotential */
+							       (short) sv.fuel, /* fuel rate */
+							       (unsigned int) teng, /* total engine hours */
+							       (unsigned short) pclnt, /* coolant pressure */
+							       (unsigned short) pfl, /* fuel pressure */
+							       (NMEA2000::EngineStatus1) steng1, /* engine status 1 */
+							       (NMEA2000::EngineStatus2) steng2, /* engine status 2 */
+							       (char) ld, /* percent engine load */
+							       (char) tq /* percent engine torque */
+							       );
 	auto data = CreateData(builder,
 			       get_time(),
 			       NMEA2000::Payload_EngineParametersDynamic,
