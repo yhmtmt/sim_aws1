@@ -226,7 +226,9 @@ void f_sim_aws1::set_stat()
     auto data = CreateData(builder, get_time(),
 			   Control::Payload_Config, payload.Union());
     builder.Finish(data);
-    m_ch_ctrl_out->push(builder.GetBufferPointer(), builder.GetSize());
+    unsigned int sz = builder.GetSize();
+    
+    m_ch_ctrl_out->push(builder.GetBufferPointer(), sz);
     
   }  
 }
