@@ -36,16 +36,16 @@ protected:
   // input channels
   ch_state * m_state;
   ch_eng_state * m_engstate;
-  
+
+  bool bconfig;
   unsigned char eng_max, eng_nuf, eng_nut, eng_nub, eng_min,
     rud_max, rud_nut, rud_min;
   
   ch_ctrl_data * m_ch_ctrl_out;         // (ui<-autopilot<-sim)
   ch_ctrl_data * m_ch_ctrl_in;          // (ui->autopilot->sim)
-  unsigned char buf[64];
+  unsigned char buf[256];
   unsigned int buf_len;
   flatbuffers::FlatBufferBuilder builder;
-  Control::Config config;
   
   // output channels
   ch_state * m_state_sim;
