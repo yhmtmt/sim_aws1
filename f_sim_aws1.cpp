@@ -384,21 +384,26 @@ void f_sim_aws1::set_output_state_vector(const long long & tcur)
   if(m_gps_nmea && (tgps_report + cycle_gps_report <= tcur)){
     tmex tm;
     gmtimeex(get_time() / MSEC, tm);
-    gga_enc.m_toker[0] = 'G';
-    gga_enc.m_toker[1] = 'P';
-    gga_enc.m_h = tm.tm_hour;
-    gga_enc.m_m = tm.tm_min;
-    gga_enc.m_s = (float)((double)(tm.tm_sec * 1000 + tm.tm_msec) * 0.001);
-    gga_enc.m_lat_deg = sv.lat * (180.f / PI);
-    gga_enc.m_lon_deg = sv.lon * (180.f / PI);
-    gga_enc.m_alt = 0.0f;
-    gga_enc.m_geos = 0.0f;
-    gga_enc.m_hdop = 0.0f;
-    gga_enc.m_dgps_age = 0.0f;
-    gga_enc.m_dgps_station = 0;
-    gga_enc.m_fix_status = NMEA0183::GPSFixStatus_GPSF;
+    gll_enc.m_toker[0] = 'G';
+    gll_enc.m_toker[1] = 'P';
+    gll_enc.hour = tm.tm_hour;
+    gll_enc.mint = tm.tm_min;
+    gll_enc.msec = (short)(tm.tm_sec * 1000 + tm.tm_msec);
+    gll_enc.lat = sv.lat * (180.f / PI);
+    gll_enc.lon = sv.lon * (180.f / PI);
+    if(gll_enc.lat < 0){
+      gll_enc.lat = -gll_enc.lat;
+      gll_enc.lat_dir = EGP_S;
+    }
+    if(gll_enc.lon < 0){
+      gll_enc.lon = -gll_enc.lon;
+      gll_enc.lon_dir = EGP_W;
+    }
+        
+    gll_enc.available = true;
+    gll_enc.fs = NMEA0183::GPSFixStatus_GPSF;
 
-    if(gga_enc.encode(nmea_buf))
+    if(gll_enc.encode(nmea_buf))
       m_gps_nmea->push(nmea_buf);
 
     vtg_enc.m_toker[0] = 'G';
@@ -414,9 +419,9 @@ void f_sim_aws1::set_output_state_vector(const long long & tcur)
 
     psat_hpr_enc.m_toker[0] = 'P';
     psat_hpr_enc.m_toker[1] = 'S';
-    psat_hpr_enc.hour = gga_enc.m_h;
-    psat_hpr_enc.mint = gga_enc.m_m;
-    psat_hpr_enc.sec = gga_enc.m_s;
+    psat_hpr_enc.hour = gll_enc.hour;
+    psat_hpr_enc.mint = gll_enc.mint;
+    psat_hpr_enc.sec = (float)((float)gll_enc.msec * 0.001);
     psat_hpr_enc.hdg = sv.yaw * (180.f / PI);
     psat_hpr_enc.roll = sv.roll * (180.f / PI);
     psat_hpr_enc.pitch = sv.pitch * (180.f / PI);

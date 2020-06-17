@@ -56,7 +56,7 @@ protected:
   unsigned int cycle_gps_report;
   long long tgps_report;
   char nmea_buf[84];
-  c_gga gga_enc;
+  c_gll gll_enc;
   c_vtg vtg_enc;
   c_psat_hpr psat_hpr_enc;
   ch_n2k_data * m_eng_n2k_data;
