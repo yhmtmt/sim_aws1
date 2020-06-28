@@ -399,7 +399,7 @@ void f_sim_aws1::set_output_state_vector(const long long & tcur)
       gll_enc.lon = -gll_enc.lon;
       gll_enc.lon_dir = EGP_W;
     }
-        
+
     gll_enc.available = true;
     gll_enc.fs = NMEA0183::GPSFixStatus_GPSF;
 
