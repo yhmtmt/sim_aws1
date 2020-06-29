@@ -414,9 +414,9 @@ void f_sim_aws1::set_output_state_vector(const long long & tcur)
     vtg_enc.v_n = sv.sog;
     vtg_enc.v_k = sv.sog * 1.852;
 
-    if(vtg_enc.encode(nmea_buf))
+    if(vtg_enc.encode(nmea_buf)){
       m_gps_nmea->push(nmea_buf);
-
+    }
     psat_hpr_enc.m_toker[0] = 'P';
     psat_hpr_enc.m_toker[1] = 'S';
     psat_hpr_enc.hour = gll_enc.hour;

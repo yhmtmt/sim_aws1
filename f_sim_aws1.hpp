@@ -72,25 +72,25 @@ protected:
     float eng, rud, rev, fuel; 
     float thro_pos, gear_pos, rud_pos, rud_slack;
     
-  s_state_vector(const long long & _t,
-		 const double & _lat, const double & _lon,
-		 const double & _roll, const double & _pitch,
-		 const double & _yaw,
-		 const double & _cog, const double & _sog,
-		 const float & _eng, const float & _rud,
-		 const float & _rev, const float & _fuel) :
-    t(_t), lat(_lat), lon(_lon),
+    s_state_vector(const long long & _t,
+		   const double & _lat, const double & _lon,
+		   const double & _roll, const double & _pitch,
+		   const double & _yaw,
+		   const double & _cog, const double & _sog,
+		   const float & _eng, const float & _rud,
+		   const float & _rev, const float & _fuel) :
+      t(_t), lat(_lat), lon(_lon),
       roll(_roll), pitch(_pitch), yaw(_yaw), cog(_cog), sog(_sog),
       eng(_eng), rud(_rud), rev(_rev), fuel(_fuel), ryaw(0)
     {
       update_coordinates();
     }
     
-  s_state_vector() :lat(135.f), lon(35.f),
-      roll(0.f), pitch(0.f), yaw(0.f), cog(0.f), sog(0.f),
-      eng(127.0f), rud(127.0f), rev(700.f), fuel(0.1f),
-      thro_pos(0.f), gear_pos(0.f),
-      rud_pos(0.f), rud_slack(0.f)
+    s_state_vector() :lat(135.f), lon(35.f),
+		      roll(0.f), pitch(0.f), yaw(0.f), cog(0.f), sog(0.f),
+		      eng(127.0f), rud(127.0f), rev(700.f), fuel(0.1f),
+		      thro_pos(0.f), gear_pos(0.f),
+		      rud_pos(0.f), rud_slack(0.f)
     {
       update_coordinates();
     }
@@ -99,7 +99,7 @@ protected:
       blhtoecef(lat, lon, 0, xe, ye, ze);
       getwrldrot(lat, lon, Rwrld);			
     }
-
+    
     void print()
     {
       cout << " rud:" << rud << " rud_pos:" << rud_pos
